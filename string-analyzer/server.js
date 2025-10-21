@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(morgan("dev"));
 
-// Basic rate limiting (best practice for public API)
+// Basic rate limiting
 const limiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
   max: 100, // 100 requests per minute
@@ -21,13 +21,20 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// Routes
-app.use("/strings", stringRoutes);
 
 // Default route
 app.get("/", (req, res) => {
-  res.json({ message: "String Analyzer API - Stage 1" });
+  res.json({
+    status: "success",
+    message: "Stage 1 API is running 🚀",
+    timestamp: new Date().toISOString(),
+  });
 });
+
+// Routes
+app.use("/strings", stringRoutes);
+
+
 
 // Start server
 app.listen(PORT, () => {

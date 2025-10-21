@@ -2,6 +2,7 @@ import express from "express";
 import storage from "../data/storage.js";
 import { analyzeString } from "../utils/analyzer.js";
 
+
 const router = express.Router();
 
 // POST /strings - Analyze and store string
@@ -36,6 +37,29 @@ router.post("/", (req, res) => {
 
   // Return response
   return res.status(201).json(analyzedData);
+});
+
+// ✅ GET /strings/:string_value - Retrieve a specific analyzed string
+router.get("/:string_value", (req, res) => {
+  const { string_value } = req.params;
+
+  // Recalculate SHA-256 hash (used as ID)
+  import("crypto").then((crypto) => {
+    const sha256_hash = crypto
+      .createHash("sha256")
+      .update(string_value)
+      .digest("hex");
+
+    // Check if exists in storage
+    if (!storage.has(sha256_hash)) {
+      return res
+        .status(404)
+        .json({ error: "String does not exist in the system." });
+    }
+
+    const record = storage.get(sha256_hash);
+    return res.status(200).json(record);
+  });
 });
 
 export default router;
