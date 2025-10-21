@@ -39,7 +39,7 @@ router.post("/", (req, res) => {
   return res.status(201).json(analyzedData);
 });
 
-// ✅ GET /strings/:string_value - Retrieve a specific analyzed string
+// GET /strings/:string_value - Retrieve a specific analyzed string
 router.get("/:string_value", (req, res) => {
   const { string_value } = req.params;
 
@@ -61,5 +61,84 @@ router.get("/:string_value", (req, res) => {
     return res.status(200).json(record);
   });
 });
+
+// ✅ GET /strings - Retrieve all strings with optional filters
+router.get("/", (req, res) => {
+  try {
+    const {
+      is_palindrome,
+      min_length,
+      max_length,
+      word_count,
+      contains_character,
+    } = req.query;
+
+    let results = Array.from(storage.values());
+    const filtersApplied = {};
+
+    // Validate query types and apply filters
+
+    if (is_palindrome !== undefined) {
+      if (is_palindrome !== "true" && is_palindrome !== "false") {
+        return res
+          .status(400)
+          .json({ error: "Invalid value for is_palindrome. Use true or false." });
+      }
+      const boolValue = is_palindrome === "true";
+      results = results.filter((item) => item.properties.is_palindrome === boolValue);
+      filtersApplied.is_palindrome = boolValue;
+    }
+
+    if (min_length !== undefined) {
+      const num = parseInt(min_length);
+      if (isNaN(num)) {
+        return res.status(400).json({ error: "min_length must be an integer." });
+      }
+      results = results.filter((item) => item.properties.length >= num);
+      filtersApplied.min_length = num;
+    }
+
+    if (max_length !== undefined) {
+      const num = parseInt(max_length);
+      if (isNaN(num)) {
+        return res.status(400).json({ error: "max_length must be an integer." });
+      }
+      results = results.filter((item) => item.properties.length <= num);
+      filtersApplied.max_length = num;
+    }
+
+    if (word_count !== undefined) {
+      const num = parseInt(word_count);
+      if (isNaN(num)) {
+        return res.status(400).json({ error: "word_count must be an integer." });
+      }
+      results = results.filter((item) => item.properties.word_count === num);
+      filtersApplied.word_count = num;
+    }
+
+    if (contains_character !== undefined) {
+      if (contains_character.length !== 1) {
+        return res.status(400).json({
+          error: "contains_character must be a single character.",
+        });
+      }
+      const char = contains_character.toLowerCase();
+      results = results.filter((item) =>
+        item.value.toLowerCase().includes(char)
+      );
+      filtersApplied.contains_character = char;
+    }
+
+    return res.status(200).json({
+      data: results,
+      count: results.length,
+      filters_applied: filtersApplied,
+    });
+  } catch (err) {
+    console.error("Error filtering strings:", err);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 
 export default router;

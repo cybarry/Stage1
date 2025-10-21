@@ -13,6 +13,8 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(morgan("dev"));
 
+app.set('json spaces', 2);
+
 // Basic rate limiting
 const limiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
@@ -26,7 +28,7 @@ app.use(limiter);
 app.get("/", (req, res) => {
   res.json({
     status: "success",
-    message: "Stage 1 API is running 🚀",
+    message: "Stage 1 API is running",
     timestamp: new Date().toISOString(),
   });
 });
